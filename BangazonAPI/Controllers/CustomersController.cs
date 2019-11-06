@@ -39,32 +39,36 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "Write your SQL statement here to get all customers";
-                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                   
+                        cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
+                        FROM Customer";
+                        SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-                    List<Customer> customers = new List<Customer>();
-                    while (reader.Read())
-                    {
-                        Customer customer = new Customer
+                        List<Customer> customers = new List<Customer>();
+                        while (reader.Read())
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            // You might have more columns
-                        };
+                            Customer customer = new Customer
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
+                                LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
+                              
+                            };
 
-                        customers.Add(customer);
+                            customers.Add(customer);
+                        }
+
+                        reader.Close();
+
+                        return Ok(customers);
                     }
-
-                    reader.Close();
-
-                    return Ok(customers);
                 }
             }
-        }
 
         // GET api/customers/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<IActionResult> Get(int id)
         {
             using (SqlConnection conn = Connection)
@@ -72,7 +76,9 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "Write your SQL statement here to get a single customer";
+                    cmd.CommandText = @"SELECT ID, FirstName, LastName, CreationDate, LastActiveDate 
+                                      FROM Customer 
+                                      WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
@@ -84,7 +90,9 @@ namespace BangazonAPI.Controllers
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            // You might have more columns
+                            CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
+                            LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
+                          
                         };
                     }
 
@@ -106,13 +114,16 @@ namespace BangazonAPI.Controllers
                 {
                     // More string interpolation
                     cmd.CommandText = @"
-                        INSERT INTO Customer ()
+                        INSERT INTO Customer (FirstName, LastName, CreationDate, LastActiveDate)
                         OUTPUT INSERTED.Id
-                        VALUES ()
+                        VALUES (@FirstName, @LastName, @CreationDate, @LastActiveDate);
                     ";
-                    cmd.Parameters.Add(new SqlParameter("@firstName", customer.FirstName));
+                    cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
+                    cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
+                    cmd.Parameters.Add(new SqlParameter("@CreationDate", customer.CreationDate));
+                    cmd.Parameters.Add(new SqlParameter("@LastActiveDate", customer.LastActiveDate));
 
-                    customer.Id = (int) await cmd.ExecuteScalarAsync();
+                    customer.Id = (int)await cmd.ExecuteScalarAsync();
 
                     return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customer);
                 }
@@ -121,7 +132,7 @@ namespace BangazonAPI.Controllers
 
         // PUT api/customers/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Customer customer)
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Customer customer)
         {
             try
             {
@@ -132,12 +143,17 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"
                             UPDATE Customer
-                            SET FirstName = @firstName
-                            -- Set the remaining columns here
+                            SET FirstName = @FirstName,
+                            LastName = @LastName,
+                            CreationDate = @CreationDate,
+                            LastActiveDate = @LastActiveDate
                             WHERE Id = @id
                         ";
-                        cmd.Parameters.Add(new SqlParameter("@id", customer.Id));
-                        cmd.Parameters.Add(new SqlParameter("@firstName", customer.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@id",id));
+                        cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
+                        cmd.Parameters.Add(new SqlParameter("@CreationDate", customer.CreationDate));
+                        cmd.Parameters.Add(new SqlParameter("@LastActiveDate", customer.LastActiveDate));
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -165,9 +181,38 @@ namespace BangazonAPI.Controllers
 
         // DELETE api/customers/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            throw new NotImplementedException("This method isn't implemented...yet.");
+            try
+            {
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"DELETE FROM Customer WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            return new StatusCodeResult(StatusCodes.Status204NoContent);
+                        }
+                        throw new Exception("No rows affected");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                if (!CustomerExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         private bool CustomerExists(int id)
