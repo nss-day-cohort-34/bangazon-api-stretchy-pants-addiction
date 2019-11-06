@@ -110,22 +110,28 @@ namespace BangazonAPI.Controllers
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
+                try
                 {
-                    // More string interpolation
-                    cmd.CommandText = @"
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        // More string interpolation
+                        cmd.CommandText = @"
                         INSERT INTO Customer (FirstName, LastName, CreationDate, LastActiveDate)
                         OUTPUT INSERTED.Id
                         VALUES (@FirstName, @LastName, @CreationDate, @LastActiveDate);
                     ";
-                    cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
-                    cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
-                    cmd.Parameters.Add(new SqlParameter("@CreationDate", customer.CreationDate));
-                    cmd.Parameters.Add(new SqlParameter("@LastActiveDate", customer.LastActiveDate));
+                        cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
+                        cmd.Parameters.Add(new SqlParameter("@CreationDate", customer.CreationDate));
+                        cmd.Parameters.Add(new SqlParameter("@LastActiveDate", customer.LastActiveDate));
 
-                    customer.Id = (int)await cmd.ExecuteScalarAsync();
+                        customer.Id = (int)await cmd.ExecuteScalarAsync();
 
-                    return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customer);
+                        return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customer);
+                    }
+                }
+                catch(Exception e) {
+                    throw;
                 }
             }
         }
