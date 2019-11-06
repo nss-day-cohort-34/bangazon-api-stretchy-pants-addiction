@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,5 +13,7 @@ namespace BangazonAPI.Models
 
         [Required]
         public string LastName { get; set; }
+        public DateTime CreationDate { get; set; }
+        public DateTime LastActiveDate { get; set; }
     }
 }
