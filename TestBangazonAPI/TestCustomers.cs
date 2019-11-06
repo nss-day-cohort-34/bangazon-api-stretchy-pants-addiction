@@ -28,7 +28,7 @@ namespace TestBangazonAPI
                 /*
                     ACT
                 */
-                var response = await client.GetAsync("/api/customers");
+                var response = await client.GetAsync("/api/customers/");
 
 
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -38,6 +38,34 @@ namespace TestBangazonAPI
                 */
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 Assert.True(customers.Count > 0);
+            }
+        }
+        [Fact]
+        //=========================
+        // Test Get Customer By Id
+        //=========================
+        public async Task Test_Customer_By_Id()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                /*
+                    ARRANGE
+                */
+
+
+                /*
+                    ACT
+                */
+                var response = await client.GetAsync("/api/customers/1");
+
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var customer = JsonConvert.DeserializeObject<Customer>(responseBody);
+                /*
+                    ASSERT
+                */
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                
             }
         }
         [Fact]
@@ -115,7 +143,7 @@ namespace TestBangazonAPI
         [Fact]
         public async Task Test_Modify_Customer()
         {
-            // New last name to change to and test
+            // New first name to change to and test
             string newFirstName = "Jack";
 
             using (var client = new APIClientProvider().Client)
