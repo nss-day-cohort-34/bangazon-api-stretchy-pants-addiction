@@ -123,20 +123,22 @@ namespace TestBangazonAPI
        [Fact]
         public async Task Test_Modify_ProductType()
         {
+           
+            string newName = "HouseCare";
 
             using (var client = new APIClientProvider().Client)
             {
                
-                ProductTypes modifiedJack = new ProductTypes
+                ProductTypes modifiedProductType = new ProductTypes
                 {
-                    Name = "Jack",
+                    Name = "HouseCare",
 
                 };
-                var modifiedJackAsJSON = JsonConvert.SerializeObject(modifiedJack);
+                var modifiedProductTypeAsJSON = JsonConvert.SerializeObject(modifiedProductType);
 
                 var response = await client.PutAsync(
-                    "/api/animals/1",
-                    new StringContent(modifiedJackAsJSON, Encoding.UTF8, "application/json")
+                    "/api/producttype/1",
+                    new StringContent(modifiedProductTypeAsJSON, Encoding.UTF8, "application/json")
                 );
                 string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -144,14 +146,14 @@ namespace TestBangazonAPI
 
 
             
-                var getJack = await client.GetAsync("/api/animals/1");
-                getJack.EnsureSuccessStatusCode();
+                var getProductType = await client.GetAsync("/api/producttype/1");
+                getProductType.EnsureSuccessStatusCode();
 
-                string getJackBody = await getJack.Content.ReadAsStringAsync();
-                ProductTypes newJack = JsonConvert.DeserializeObject<ProductTypes>(getJackBody);
+                string getProductTypeBody = await getProductType.Content.ReadAsStringAsync();
+                ProductTypes newProductType = JsonConvert.DeserializeObject<ProductTypes>(getProductTypeBody);
 
-                Assert.Equal(HttpStatusCode.OK, getJack.StatusCode);
-                Assert.Equal(newAge, newJack.Age);
+                Assert.Equal(HttpStatusCode.OK, getProductType.StatusCode);
+                Assert.Equal(newName, newProductType.Name);
             }
         }
     }
