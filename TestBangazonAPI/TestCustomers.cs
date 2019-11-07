@@ -28,7 +28,7 @@ namespace TestBangazonAPI
                 /*
                     ACT
                 */
-                var response = await client.GetAsync("/api/customers/");
+                var response = await client.GetAsync("/api/customers");
 
 
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -44,7 +44,7 @@ namespace TestBangazonAPI
         //=========================
         // Test Get Customer By Id
         //=========================
-        public async Task Test_Customer_By_Id()
+        public async Task   Test_Customer_By_Id()
         {
             using (var client = new APIClientProvider().Client)
             {
@@ -65,9 +65,38 @@ namespace TestBangazonAPI
                     ASSERT
                 */
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                
+                Assert.Equal("Jack", customer.FirstName);
             }
         }
+        [Fact]
+        //=========================
+        // Test Delete Customer
+        //=========================
+        public async Task Test_Delete_Customer()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                /*
+                    ARRANGE
+                */
+
+
+                /*
+                    ACT
+                */
+                var response = await client.DeleteAsync("/api/customers/1");
+
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                //var customer = JsonConvert.DeserializeObject<Customer>(responseBody);
+                /*
+                    ASSERT
+                */
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+                //Assert.Equal("Jack", customer.FirstName);
+            }
+        }
+
         [Fact]
         //=========================
         //Test Create Customer
