@@ -15,5 +15,10 @@ namespace BangazonAPI.Models
         public string LastName { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime LastActiveDate { get; set; }
+<<<<<<< HEAD
+       
+=======
+        public List<Product> Products { get; set; } = new List<Product>();
+>>>>>>> master
     }
 }
