@@ -11,7 +11,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace BangazonAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] 
     [ApiController]
     public class PaymentTypesController : ControllerBase
     {
@@ -142,7 +142,7 @@ namespace BangazonAPI.Controllers
                             UPDATE PaymentType
                             SET AcctNumber = @AcctNumber,
                             Name = @Name,
-                            CustomerId = @CustomerId,                            
+                            CustomerId = @CustomerId                            
                             WHERE Id = @id
                         ";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
