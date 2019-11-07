@@ -69,6 +69,8 @@ namespace BangazonAPI.Controllers
                 return Ok(orders);
             }
         }
+        //need a get all that gets orders with products associated with the order
+        //If the query string parameter of ?_include=products is in the URL, then the list of products in the order should be returned.
 
         // GET api/Orders/5
         [HttpGet("{id}", Name = "GetOrder")]
@@ -181,6 +183,7 @@ namespace BangazonAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
+            //if an order is deleted then the all the items in orderProduct table need to be removed from the corresponding orderID
             try
             {
                 using (SqlConnection conn = Connection)
@@ -188,7 +191,9 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM [Order] WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM OrderProduct WHERE OrderId = @id;
+                                            DELETE FROM [Order] WHERE Id = @id";
+
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();
