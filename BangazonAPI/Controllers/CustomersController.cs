@@ -32,24 +32,24 @@ namespace BangazonAPI.Controllers
 
         // GET api/customers?products
         [HttpGet]
-        public async Task<IActionResult> Get(string include)
+        public async Task<IActionResult> Get()
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    if (include == "products")
-                    {
-                        cmd.CommandText = @"SELECT c.Id AS CustomerId, FirstName, LastName, CreationDate, LastActiveDate,p.Id AS ProductId, Title, Description, Price, Quantity
-                        FROM Customer c
-                         JOIN Product p ON c.Id = p.CustomerId";
-                    }
-                    else
-                    {
+                  
+                    
+                        //cmd.CommandText = @"SELECT c.Id AS CustomerId, FirstName, LastName, CreationDate, LastActiveDate,p.Id AS ProductId, Title, Description, Price, Quantity
+                        //FROM Customer c
+                        // JOIN Product p ON c.Id = p.CustomerId";
+                    
+                    
+                    
                         cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
                         FROM Customer ";
-                    }
+                    
                          
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
