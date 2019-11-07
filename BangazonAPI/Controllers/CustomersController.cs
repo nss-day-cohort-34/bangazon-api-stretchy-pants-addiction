@@ -30,7 +30,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        // GET api/customers
+        // GET api/customers?products
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -39,9 +39,11 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                   
-                        cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
-                        FROM Customer";
+                    //if (include == "products")
+                    //{
+                        cmd.CommandText = @"SELECT c.Id AS CustomerId, FirstName, LastName, CreationDate, LastActiveDate,p.Id AS ProductId, Title, Description, Price, Quantity
+                        FROM Customer c
+                         JOIN Product p ON c.Id = p.CustomerId";
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                         List<Customer> customers = new List<Customer>();
@@ -54,7 +56,7 @@ namespace BangazonAPI.Controllers
                                 LastName = reader.GetString(reader.GetOrdinal("LastName")),
                                 CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
                                 LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
-                              
+
                             };
 
                             customers.Add(customer);
@@ -63,9 +65,13 @@ namespace BangazonAPI.Controllers
                         reader.Close();
 
                         return Ok(customers);
-                    }
+                    //} else if (include == "payments")
+                    //{
+
+                    //}
                 }
             }
+        }
 
         // GET api/customers/5
         [HttpGet("{id}", Name = "GetCustomer")]
@@ -92,7 +98,7 @@ namespace BangazonAPI.Controllers
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
                             LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
-                          
+
                         };
                     }
 
@@ -118,7 +124,7 @@ namespace BangazonAPI.Controllers
                         cmd.CommandText = @"
                         INSERT INTO Customer (FirstName, LastName, CreationDate, LastActiveDate)
                         OUTPUT INSERTED.Id
-                        VALUES (@FirstName, @LastName, @CreationDate, @LastActiveDate);
+                        VALUES (@FirstName, @LastName, @CreationDate, @LastActiveDate)
                     ";
                         cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
                         cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
@@ -130,7 +136,8 @@ namespace BangazonAPI.Controllers
                         return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customer);
                     }
                 }
-                catch(Exception e) {
+                catch (Exception e)
+                {
                     throw;
                 }
             }
@@ -155,7 +162,7 @@ namespace BangazonAPI.Controllers
                             LastActiveDate = @LastActiveDate
                             WHERE Id = @id
                         ";
-                        cmd.Parameters.Add(new SqlParameter("@id",id));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
                         cmd.Parameters.Add(new SqlParameter("@FirstName", customer.FirstName));
                         cmd.Parameters.Add(new SqlParameter("@LastName", customer.LastName));
                         cmd.Parameters.Add(new SqlParameter("@CreationDate", customer.CreationDate));
