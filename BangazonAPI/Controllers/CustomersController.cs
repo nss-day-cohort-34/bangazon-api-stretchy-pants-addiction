@@ -205,7 +205,7 @@ namespace BangazonAPI.Controllers
             catch (Exception)
             {
                 if (!CustomerExists(id))
-                {
+                { 
                     return NotFound();
                 }
                 else

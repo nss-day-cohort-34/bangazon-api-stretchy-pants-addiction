@@ -15,5 +15,6 @@ namespace BangazonAPI.Models
         public string LastName { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime LastActiveDate { get; set; }
+       
     }
 }
