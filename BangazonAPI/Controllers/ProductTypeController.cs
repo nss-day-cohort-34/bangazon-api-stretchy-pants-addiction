@@ -124,7 +124,7 @@ namespace BangazonAPI.Controllers
 
         // PUT api/product/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ProductTypes producttypes)
+        public async Task<IActionResult> Put(int id, [FromBody] ProductTypes producttype)
         {
             try
             {
@@ -134,13 +134,13 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"
-                            UPDATE ProductTypes
-                            SET Title = @Name,
-                           
+                            UPDATE ProductType
+                            SET Name = @Name
+  
                             WHERE Id = @id
                         ";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
-                        cmd.Parameters.Add(new SqlParameter("@Name", producttypes.Name));
+                        cmd.Parameters.Add(new SqlParameter("@Name", producttype.Name));
                        
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -177,7 +177,7 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM ProductTypes WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM ProductType WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();
@@ -209,7 +209,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id FROM ProductTypes WHERE Id = @id";
+                    cmd.CommandText = "SELECT Id FROM ProductType WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
