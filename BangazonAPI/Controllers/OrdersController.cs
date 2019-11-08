@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -13,11 +13,11 @@ namespace BangazonAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductTypeController : ControllerBase
+    public class OrdersController : ControllerBase
     {
         private readonly IConfiguration _config;
 
-        public ProductTypeController(IConfiguration config)
+        public OrdersController(IConfiguration config)
         {
             _config = config;
         }
@@ -30,42 +30,50 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        // GET api/producttypes
+        // GET api/orders
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            using (SqlConnection conn = Connection)
+            using SqlConnection conn = Connection;
+            conn.Open();
+            using (SqlCommand cmd = conn.CreateCommand())
             {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
+
+                cmd.CommandText = @"SELECT ID, CustomerId, PaymentTypeId
+                                    FROM [Order]";
+
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+                List<Order> orders = new List<Order>();
+                while (reader.Read())
                 {
 
-                    cmd.CommandText = @"SELECT *
-                                    FROM ProductType";
-                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
-
-                    List<ProductTypes> producttypes = new List<ProductTypes>();
-                    while (reader.Read())
+                    Order order = new Order
                     {
-                        ProductTypes producttype = new ProductTypes
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                        PaymentTypeId = null
+                    };
 
-                        };
-
-                        producttypes.Add(producttype);
+                    var IsPaymentNull = reader.IsDBNull(reader.GetOrdinal("PaymentTypeId"));
+                    if (!IsPaymentNull)
+                    {
+                        order.PaymentTypeId = reader.GetInt32(reader.GetOrdinal("PaymentTypeId"));
                     }
 
-                    reader.Close();
-
-                    return Ok(producttypes);
+                    orders.Add(order);
                 }
+
+                reader.Close();
+
+                return Ok(orders);
             }
         }
+        //need a get all that gets orders with products associated with the order
+        //If the query string parameter of ?_include=products is in the URL, then the list of products in the order should be returned.
 
-        // GET api/products/5
-        [HttpGet("{id}", Name = "GetProductType")]
+        // GET api/Orders/5
+        [HttpGet("{id}", Name = "GetOrder")]
         public async Task<IActionResult> Get(int id)
         {
             using (SqlConnection conn = Connection)
@@ -73,33 +81,39 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT ID, Name
-                                    FROM ProductType
+                    cmd.CommandText = @"SELECT ID, CustomerId, PaymentTypeId
+                                    FROM [Order]
                                     WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-                    ProductTypes producttypes = null;
+                    Order order = null;
                     if (reader.Read())
                     {
-                        producttypes = new ProductTypes
+                        order = new Order
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            PaymentTypeId = null
                         };
+
+                        var IsPaymentNull = reader.IsDBNull(reader.GetOrdinal("PaymentTypeId"));
+                        if (!IsPaymentNull)
+                        {
+                            order.PaymentTypeId = reader.GetInt32(reader.GetOrdinal("PaymentTypeId"));
+                        }
                     }
 
                     reader.Close();
 
-                    return Ok(producttypes);
+                    return Ok(order);
                 }
             }
         }
 
-        // POST api/customers
+        // POST api/orders
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] ProductTypes producttype)
+        public async Task<IActionResult> Post([FromBody] Order order)
         {
             using (SqlConnection conn = Connection)
             {
@@ -108,23 +122,23 @@ namespace BangazonAPI.Controllers
                 {
                     // More string interpolation
                     cmd.CommandText = @"
-                        INSERT INTO ProductType (Name)
+                        INSERT INTO [Order] (CustomerId, PaymentTypeId)
                         OUTPUT INSERTED.Id
-                        VALUES (@Name)
+                        VALUES ( @CustomerId, @PaymentTypeId)
                     ";
-                    cmd.Parameters.Add(new SqlParameter("@Name", producttype.Name));
-                    
+                    cmd.Parameters.Add(new SqlParameter("@CustomerId", order.CustomerId));
+                    cmd.Parameters.Add(new SqlParameter("@PaymentTypeId", order.PaymentTypeId));
 
-                    producttype.Id = (int)await cmd.ExecuteScalarAsync();
+                    order.Id = (int)await cmd.ExecuteScalarAsync();
 
-                    return CreatedAtRoute("GetProductType", new { id = producttype.Id }, producttype);
+                    return CreatedAtRoute("GetOrder", new { id = order.Id }, order);
                 }
             }
         }
 
-        // PUT api/product/5
+        // PUT api/order/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ProductTypes producttype)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody] Order order)
         {
             try
             {
@@ -134,14 +148,13 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"
-                            UPDATE ProductType
-                            SET Name = @Name
-  
+                            UPDATE [Order] SET CustomerId = @CustomerId, PaymentTypeId = @PaymentTypeId
                             WHERE Id = @id
                         ";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
-                        cmd.Parameters.Add(new SqlParameter("@Name", producttype.Name));
-                       
+                        cmd.Parameters.Add(new SqlParameter("@CustomerId", order.CustomerId));
+                        cmd.Parameters.Add(new SqlParameter("@PaymentTypeId", order.PaymentTypeId));
+
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
                         if (rowsAffected > 0)
@@ -155,7 +168,7 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
-                if (!ProductTypeExists(id))
+                if (!OrderExists(id))
                 {
                     return NotFound();
                 }
@@ -166,10 +179,11 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        // DELETE api/product/5
+        // DELETE api/order/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
+            //if an order is deleted then the all the items in orderProduct table need to be removed from the corresponding orderID
             try
             {
                 using (SqlConnection conn = Connection)
@@ -177,7 +191,9 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM ProductType WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM OrderProduct WHERE OrderId = @id;
+                                            DELETE FROM [Order] WHERE Id = @id";
+
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();
@@ -191,7 +207,7 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
-                if (!ProductTypeExists(id))
+                if (!OrderExists(id))
                 {
                     return NotFound();
                 }
@@ -202,14 +218,14 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        private bool ProductTypeExists(int id)
+        private bool OrderExists(int id)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id FROM ProductType WHERE Id = @id";
+                    cmd.CommandText = "SELECT Id FROM Order WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
