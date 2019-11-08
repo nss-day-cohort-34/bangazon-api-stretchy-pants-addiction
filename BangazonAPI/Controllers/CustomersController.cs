@@ -46,12 +46,6 @@ namespace BangazonAPI.Controllers
                         FROM Customer c
                          JOIN Product p ON c.Id = p.CustomerId";
 
-
-
-                        //cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
-                        //FROM Customer c";
-
-
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                         Dictionary<int, Customer> customers = new Dictionary<int, Customer>();
@@ -81,7 +75,7 @@ namespace BangazonAPI.Controllers
                                     Title = reader.GetString(reader.GetOrdinal("Title")),
                                     Description = reader.GetString(reader.GetOrdinal("Description")),
                                     Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                    Quantity = reader.GetInt16(reader.GetOrdinal("Quantity"))
+                                    Quantity = reader.GetInt32(reader.GetOrdinal("Quantity"))
                                 };
                                 fromDictionary.Products.Add(aProduct);
                             }
@@ -93,6 +87,28 @@ namespace BangazonAPI.Controllers
                     }else
                     {
 
+                        cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
+                        FROM Customer c";
+                        SqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+                        List<Customer> customers = new List<Customer>();
+                        while (reader.Read())
+                        {
+                            Customer customer = new Customer
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
+                                LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
+
+                            };
+
+                            customers.Add(customer);
+                        }
+                        reader.Close();
+
+                        return Ok(customers);
                     }
                 }
             }
