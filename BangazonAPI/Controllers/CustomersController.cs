@@ -32,25 +32,63 @@ namespace BangazonAPI.Controllers
 
         // GET api/customers?products
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string include)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                  
-                    
-                        //cmd.CommandText = @"SELECT c.Id AS CustomerId, FirstName, LastName, CreationDate, LastActiveDate,p.Id AS ProductId, Title, Description, Price, Quantity
-                        //FROM Customer c
-                        // JOIN Product p ON c.Id = p.CustomerId";
-                    
-                    
-                    
+                    if (include == "products")
+                    {
+
+                        cmd.CommandText = @"SELECT c.Id, c.FirstName, c.LastName, c.CreationDate, c.LastActiveDate, p.Id AS ProductId, Title, Description, Price, Quantity
+                        FROM Customer c
+                         JOIN Product p ON c.Id = p.CustomerId";
+
+                        SqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+                        Dictionary<int, Customer> customers = new Dictionary<int, Customer>();
+                        while (reader.Read())
+                        {
+                            int customerId = reader.GetInt32(reader.GetOrdinal("Id"));
+                            if (!customers.ContainsKey(customerId))
+                            {
+                                Customer customer = new Customer
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    CreationDate = reader.GetDateTime(reader.GetOrdinal("CreationDate")),
+                                    LastActiveDate = reader.GetDateTime(reader.GetOrdinal("LastActiveDate")),
+
+                                };
+
+                                customers.Add(customerId, customer);
+                            }
+                            Customer fromDictionary = customers[customerId];
+                            if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
+                            {
+                                Product aProduct = new Product()
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Quantity = reader.GetInt32(reader.GetOrdinal("Quantity"))
+                                };
+                                fromDictionary.Products.Add(aProduct);
+                            }
+                        }
+                        reader.Close();
+
+                        return Ok(customers.Values);
+
+                    }else
+                    {
+
                         cmd.CommandText = @"SELECT Id, FirstName, LastName, CreationDate, LastActiveDate
-                        FROM Customer ";
-                    
-                         
+                        FROM Customer c";
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                         List<Customer> customers = new List<Customer>();
@@ -68,12 +106,10 @@ namespace BangazonAPI.Controllers
 
                             customers.Add(customer);
                         }
-
                         reader.Close();
 
                         return Ok(customers);
-                    
-                  
+                    }
                 }
             }
         }
@@ -223,7 +259,7 @@ namespace BangazonAPI.Controllers
             catch (Exception)
             {
                 if (!CustomerExists(id))
-                { 
+                {
                     return NotFound();
                 }
                 else

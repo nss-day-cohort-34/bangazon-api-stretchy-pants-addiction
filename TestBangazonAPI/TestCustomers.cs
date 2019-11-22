@@ -88,12 +88,12 @@ namespace TestBangazonAPI
 
 
                 string responseBody = await response.Content.ReadAsStringAsync();
-                //var customer = JsonConvert.DeserializeObject<Customer>(responseBody);
+                var customer = JsonConvert.DeserializeObject<Customer>(responseBody);
                 /*
                     ASSERT
                 */
                 Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-                //Assert.Equal("Jack", customer.FirstName);
+                Assert.Equal("Jack", customer.FirstName);
             }
         }
 
