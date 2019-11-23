@@ -42,7 +42,7 @@ namespace BangazonAPI.Controllers
                     if (include == "products")
                     {
 
-                        cmd.CommandText = @"SELECT c.Id, c.FirstName, c.LastName, c.CreationDate, c.LastActiveDate, p.Id AS ProductId, Title, Description, Price, Quantity
+                        cmd.CommandText = @"SELECT c.Id, c.FirstName, c.LastName, c.CreationDate, c.LastActiveDate, p.Id AS ProductId, Title, Description, Price, Quantity,ProductTypeId,CustomerId
                         FROM Customer c
                          JOIN Product p ON c.Id = p.CustomerId";
 
@@ -75,7 +75,9 @@ namespace BangazonAPI.Controllers
                                     Title = reader.GetString(reader.GetOrdinal("Title")),
                                     Description = reader.GetString(reader.GetOrdinal("Description")),
                                     Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                    Quantity = reader.GetInt32(reader.GetOrdinal("Quantity"))
+                                    Quantity = reader.GetInt32(reader.GetOrdinal("Quantity")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId"))
                                 };
                                 fromDictionary.Products.Add(aProduct);
                             }
